@@ -15,13 +15,7 @@ import { parse } from 'url'
 const app = express()
 const PORT = Number(process.env.PORT) || 3000
 
-const createContext = ({
-  req,
-  res,
-}: trpcExpress.CreateExpressContextOptions) => ({
-  req,
-  res,
-})
+const createContext = ({req,res,}: trpcExpress.CreateExpressContextOptions) => ({req,res,})
 
 //TS utility that let us infer the createCotext and use the req, res 
 export type ExpressContext = inferAsyncReturnType<
@@ -47,6 +41,7 @@ const start = async () => {
     stripeWebhookHandler
   )
 
+  
   const payload = await getPayloadClient({
     initOptions: {
       express: app,
@@ -71,15 +66,16 @@ const start = async () => {
     return
   }
 
+  
   const cartRouter = express.Router()
 
-  cartRouter.use(payload.authenticate)
+  cartRouter.use(payload.authenticate)//Attach de current user to our express request
 
   cartRouter.get('/', (req, res) => {
     const request = req as PayloadRequest
 
     if (!request.user)
-      return res.redirect('/sign-in?origin=cart')
+      return res.redirect('/sign-in?origin=cart')//debes estar logueado para acceder a la cart page
 
     const parsedUrl = parse(req.url, true)
     const { query } = parsedUrl
@@ -87,7 +83,8 @@ const start = async () => {
     return nextApp.render(req, res, '/cart', query)
   })
 
-  app.use('/cart', cartRouter)
+  app.use('/cart', cartRouter) //Se lo aplicamos a la ruta /cart
+
   app.use( //Cuando llega un request a este endpoint, lo redirigimos a trpc en next.js
     '/api/trpc',
     trpcExpress.createExpressMiddleware({

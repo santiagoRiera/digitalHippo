@@ -67,25 +67,25 @@ const NavItem = ({
                       onClick={() => close}
                       key={item.name}
                       className='group relative text-base sm:text-sm'>
-                      <div className='relative aspect-video overflow-hidden rounded-lg bg-gray-100 group-hover:opacity-75'>
-                        <Image
-                          src={item.imageSrc}
-                          alt='product category image'
-                          fill
-                          className='object-cover object-center'
-                        />
-                      </div>
-
-                      <Link
+                        <Link
                         href={item.href}
-                        className='mt-6 block font-medium text-gray-900'>
-                        {item.name}
+                        className='font-medium'
+                      >
+                        <div className='relative aspect-video overflow-hidden rounded-lg bg-gray-100 group-hover:opacity-75'>
+                          <Image
+                            src={item.imageSrc}
+                            alt='product category image'
+                            fill
+                            className='object-cover object-center'
+                          />
+                        </div>
+                        <p className='text-gray-900 mt-5'>{item.name}</p>
+                        <p
+                          className='mt-1 text-gray-400!'
+                          aria-hidden='true'>
+                          Shop now
+                        </p>
                       </Link>
-                      <p
-                        className='mt-1'
-                        aria-hidden='true'>
-                        Shop now
-                      </p>
                     </div>
                   ))}
                 </div>

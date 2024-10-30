@@ -24,7 +24,8 @@ const AddToCartButton = ({product}: {product: Product}) => {
         setIsSuccess(true)
       }}
       size='lg'
-      className='w-full'>
+      variant={isSuccess ? 'secondary' : 'default'}
+      className='w-full hover:'>
       {isSuccess ? 'Added!' : 'Add to cart'}
     </Button>
   )

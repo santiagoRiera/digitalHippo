@@ -1,6 +1,6 @@
 import { Product } from '@/payload-types'
 import { create } from 'zustand'
-import {createJSONStorage,persist} from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
 
 export type CartItem = {
   product: Product
@@ -22,11 +22,14 @@ export const useCart = create<CartState>()(
           return { items: [...state.items, { product }] }
         }),
       removeItem: (id) =>
-        set((state) => ({
-          items: state.items.filter(
-            (item) => item.product.id !== id
-          ),
-        })),
+        set((state) => {
+          const index = state.items.findIndex((item) => item.product.id === id)
+          if (index === -1) return state // No item found, return state as is
+          
+          const newItems = [...state.items]
+          newItems.splice(index, 1) // Remove only the first occurrence
+          return { items: newItems }
+        }),
       clearCart: () => set({ items: [] }),
     }),
     {

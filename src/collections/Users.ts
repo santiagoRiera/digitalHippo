@@ -2,8 +2,13 @@ import { PrimaryActionEmailHtml } from '../components/emails/PrimaryActionEmail'
 import { Access, CollectionConfig } from 'payload/types'
 
 const adminsAndUser: Access = ({ req: { user } }) => {
-  if (user.role === 'admin') return true
+  // Si no hay usuario, solo permitir acceso público si es necesario
+  if (!user) return true;
 
+  // Si el usuario es admin, permitir acceso total
+  if (user.role === 'admin') return true;
+
+  // Si es un usuario normal, solo puede ver su propio registro
   return {
     id: {
       equals: user.id,
@@ -14,24 +19,45 @@ const adminsAndUser: Access = ({ req: { user } }) => {
 export const Users: CollectionConfig = {
   slug: 'users',
   auth: {
-    verify: {
-      generateEmailHTML: ({ token }) => {
-        return PrimaryActionEmailHtml({
-          actionLabel: "verify your account",
-          buttonText: "Verify Account",
-          href: `${process.env.NEXT_PUBLIC_SERVER_URL}/verify-email?token=${token}`
-        })
-      },
+    verify: true,
+    tokenExpiration: 7200, // 2 horas
+    maxLoginAttempts: 5,
+    lockTime: 600 * 1000, // 10 minutos
+    cookies: {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
     },
   },
+  hooks: {
+    beforeChange: [
+      ({ data }) => {
+        return {
+          ...data,
+          _verified: true,
+        }
+      }
+    ]
+  },
   access: {
-    read: adminsAndUser,
+    read: () => true, // Permitir lectura pública
     create: () => true,
-    update: ({ req }) => req.user.role === 'admin',
-    delete: ({ req }) => req.user.role === 'admin',
+    update: ({ req }) => {
+      // Manejar el caso cuando no hay usuario
+      if (!req.user) return false;
+      return req.user.role === 'admin'
+    },
+    delete: ({ req }) => {
+      // Manejar el caso cuando no hay usuario
+      if (!req.user) return false;
+      return req.user.role === 'admin'
+    },
   },
   admin: {
-    hidden: ({ user }) => user.role !== 'admin',
+    hidden: ({ user }) => {
+      // Manejar el caso cuando no hay usuario
+      if (!user) return true;
+      return user.role !== 'admin'
+    },
     defaultColumns: ['id'],
   },
   fields: [
@@ -59,7 +85,6 @@ export const Users: CollectionConfig = {
       name: 'role',
       defaultValue: 'user',
       required: true,
-
       type: 'select',
       options: [
         { label: 'Admin', value: 'admin' },

@@ -12,9 +12,7 @@ const parse = (param: Param) => {
   return typeof param === 'string' ? param : undefined
 }
 
-const ProductsPage = ({
-  searchParams,
-}: ProductsPageProps) => {
+const ProductsPage = ({searchParams,}: ProductsPageProps) => {
   const sort = parse(searchParams.sort)
   const category = parse(searchParams.category)
 

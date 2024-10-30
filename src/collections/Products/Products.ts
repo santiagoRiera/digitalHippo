@@ -13,12 +13,14 @@ const addUser: BeforeChangeHook<Product> = async ({req,data,}) => {
   return { ...data, user: user.id }
 }
 
+//Despues de que el producto es creado o actualizado, se actualiza el usuario
 const syncUser: AfterChangeHook<Product> = async ({req,doc,}) => {
   const fullUser = await req.payload.findByID({
     collection: 'users',
     id: req.user.id,
   })
 
+  //el usewr tiene productos
   if (fullUser && typeof fullUser === 'object') {
     const products = fullUser.products as Product[] || undefined
 
@@ -32,8 +34,9 @@ const syncUser: AfterChangeHook<Product> = async ({req,doc,}) => {
       (id, index) => allIDs.indexOf(id) === index
     )
 
-    const dataToUpdate = [...createdProductIDs, doc.id]
+    const dataToUpdate = [...createdProductIDs, doc.id] //acrualizamos
 
+    //sincronizamos con la bd
     await req.payload.update({
       collection: 'users',
       id: fullUser.id,
@@ -44,17 +47,14 @@ const syncUser: AfterChangeHook<Product> = async ({req,doc,}) => {
   }
 }
 
-const isAdminOrHasAccess =
-  (): Access =>
-  ({ req: { user: _user } }) => {
+const isAdminOrHasAccess = (): Access => ({ req: { user: _user } }) => {
     const user = _user as User | undefined
 
     if (!user) return false
     if (user.role === 'admin') return true
 
-    const userProductIDs = (user.products || []).reduce<
-      Array<string>
-    >((acc, product) => {
+    //productos del usuario
+    const userProductIDs = (user.products || []).reduce<Array<string>>((acc, product) => {
       if (!product) return acc
       if (typeof product === 'string') {
         acc.push(product)
